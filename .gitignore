@@ -1,0 +1,44 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+.pytest_cache/
+
+# Virtual environment
+.venv/
+
+# Environment / secrets
+.env
+.env.local
+
+# IDE
+.vscode/
+.idea/
+
+# Data (large files)
+data/
+
+# Reference code (not part of framework)
+freqtrade/
+
+# Third-party repos (cloned externally)
+third_party/
+
+# ML lab (separate tooling)
+mllab/
+
+# Kronos strategy files (kept locally, not tracked)
+ownbot/strategy/kronos_strategy.py
+ownbot/strategy/kronos_forecast_strategy.py
+ownbot/strategy/ml/kronos_predictor.py
+ownbot/strategy/configs/kronos.toml
+ownbot/strategy/configs/kronos_forecast.toml
+
+# Documentation (kept locally)
+docs/
+*.md
+!README.md
+
+# Claude Code
+.claude/

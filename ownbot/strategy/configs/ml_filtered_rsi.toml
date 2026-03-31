@@ -1,0 +1,20 @@
+# ML-Filtered RSI Strategy Configuration
+
+timeframe = "5m"
+
+# RSI (base strategy)
+rsi_period = 14
+rsi_oversold = 25
+rsi_overbought = 75
+bb_period = 20
+bb_std = 2.0
+use_bb_filter = true
+direction = "both"
+
+# ML filter
+model_path = "data/ml/models/rsi_filter_v1.json"
+ml_threshold = 0.60               # min win probability to take a trade
+
+# Risk (per trade)
+stoploss = -1.5                    # %
+take_profit = 1.5                  # %

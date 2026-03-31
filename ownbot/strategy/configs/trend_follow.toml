@@ -1,0 +1,22 @@
+# Trend Follow Strategy Configuration
+
+timeframe = "5m"
+
+# SMA crossover
+fast_ma = 5
+slow_ma = 20
+
+# RSI filter
+rsi_period = 14
+rsi_oversold = 30
+rsi_overbought = 70
+direction = "both"                 # "long" | "short" | "both"
+
+# Risk (per trade)
+stoploss = -3.0                    # initial stoploss %
+take_profit = 6.0                  # takeprofit %
+
+# Trailing stoploss
+trailing_stop = false
+trailing_stop_distance = 2.0
+trailing_stop_activate = 1.0       # start trailing after +1% profit

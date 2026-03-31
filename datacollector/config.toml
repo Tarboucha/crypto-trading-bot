@@ -1,0 +1,17 @@
+# Data Collector Configuration
+
+[exchange]
+name = "hyperliquid"
+sandbox = false
+
+# Pairs to collect
+pairs = ["ETH", "BTC"]
+
+# Timeframes to collect per pair
+timeframes = ["1m", "5m", "15m", "1h", "4h", "1d"]
+
+# How many candles to fetch on first run (backfill)
+initial_limit = 500
+
+[logging]
+verbosity = 1  # 0=WARNING, 1=INFO, 2=DEBUG

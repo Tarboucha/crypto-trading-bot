@@ -1,0 +1,20 @@
+# RSI Mean Reversion Strategy Configuration
+
+timeframe = "5m"
+
+# RSI
+rsi_period = 14
+rsi_oversold = 25
+rsi_overbought = 75
+
+# Bollinger Bands
+bb_period = 20
+bb_std = 2.0
+use_bb_filter = true
+
+# Direction
+direction = "both"                 # "long" | "short" | "both"
+
+# Risk (per trade)
+stoploss = -1.5                    # %
+take_profit = 1.5                  # %

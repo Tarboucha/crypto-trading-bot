@@ -1,0 +1,73 @@
+# OwnBot Configuration
+
+mode = "paper"                     # paper | live | backtest
+timeframe = "5m"
+trading_mode = "futures"           # "spot" | "futures"
+settle = "USDT"                    # settlement currency for futures
+
+# Pairs to trade — formats: "ETH", "ETH/USDT", "ETH/USDT:USDT", "ETH/BTC"
+pairs = ["ETH/USDT", "BTC/USDT"]
+
+[exchange]
+name = "hyperliquid"
+sandbox = false  # mainnet for read-only, testnet has SDK issues
+key = "${HYPERLIQUID_KEY}"
+secret = "${HYPERLIQUID_SECRET}"
+
+[risk]
+max_drawdown_pct = 8.0
+risk_per_trade_pct = 0.3
+max_exposure_pct = 4.0
+loss_limit_pct = 2.0
+loss_limit_reset = "daily"         # "hourly" | "4h" | "8h" | "daily" | "weekly" | "session"
+
+[strategy]
+name = "trend_follow"       # loads strategy/trend_follow.toml automatically
+# Override any strategy param inline:
+# [strategy.params]
+# fast_ma = 10
+
+[costs]
+fee_pct = 0.035           # taker fee per side (%)
+slippage_pct = 0.01       # estimated slippage per side (%)
+spread_mode = "estimated" # "estimated" (from candles) or "fixed"
+spread_fixed_pct = 0.01   # half-spread if fixed mode (%)
+spread_factor = 0.1       # fraction of candle range if estimated mode
+
+[ml]
+# Training
+train_pairs = ["ETH", "BTC", "SOL", "DOGE", "XRP", "AVAX", "LINK", "ADA"]
+train_timeframe = "5m"
+training_data_path = "data/ml/labeled/rsi_mean_reversion_5m_8pairs.csv"
+model_name = "rsi_filter_v1.json"
+
+# Labeling (trade simulation for training data)
+label_window = 100            # candles to feed strategy
+label_stoploss = -0.5         # % stoploss for labeling trades
+label_take_profit = 1.0       # % takeprofit for labeling trades
+label_max_candles = 20        # max candles to hold before timeout
+
+# XGBoost hyperparameters
+n_estimators = 200
+max_depth = 4
+learning_rate = 0.05
+min_child_weight = 10
+subsample = 0.8
+colsample_bytree = 0.8
+reg_alpha = 0.1
+reg_lambda = 1.0
+early_stopping_rounds = 20
+
+# Walk-forward split
+train_ratio = 0.67            # first 67% for training
+val_ratio = 0.17              # next 17% for validation, rest for test
+
+# Device
+device = "cuda"               # "cuda" (GPU) or "cpu"
+
+# Inference
+ml_threshold = 0.60           # min win probability to take a trade (0.0-1.0)
+
+[logging]
+verbosity = 1  # 0=WARNING, 1=INFO, 2=DEBUG
+# logfile = "logs/ownbot.log"
