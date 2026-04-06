@@ -1,0 +1,40 @@
+# Kronos Forecasting Strategy — Path-Aware Decision Framework
+
+# Model
+pretrained_model = "data/ml/pretrained/Kronos-base"
+pretrained_tokenizer = "data/ml/pretrained/Kronos-Tokenizer-base"
+device = "cuda"
+timeframe = "5m"
+
+# Context (rolling FIFO buffer)
+max_context = 512
+
+# Forecasting
+pred_len = 10                      # candles to predict ahead
+temperature = 1.0                  # sampling temperature
+
+# Entry conditions
+entry_threshold = 0.003            # |optimal return| > 0.3%
+min_risk_reward = 1.5              # predicted risk/reward ratio
+min_trend_consistency = 0.0        # 0 = disabled, 0.6 = 60% of candles must trend
+
+# Dynamic SL/TP (from predicted path)
+use_dynamic_sl_tp = true
+sl_margin = 0.01                   # margin below/above predicted worst (0.005=tight, 0.02=loose)
+tp_margin = 0.01                   # margin below/above predicted peak
+stoploss = -2.0                    # hard limit SL % (never worse than this)
+take_profit = 3.0                  # hard limit TP %
+
+# Exit conditions
+exit_threshold = 0.0               # exit if predicted return drops below this
+exit_on_peak_passed = true         # exit if predicted peak is behind us
+reversal_candles = 3               # exit if next N predicted candles all reverse
+min_hold_rr = 0.5                  # exit if risk/reward drops below this
+
+# Trailing stoploss
+trailing_stop = true
+trailing_stop_distance = 1.0
+trailing_stop_activate = 0.5
+
+# Max hold
+max_hold_candles = 60

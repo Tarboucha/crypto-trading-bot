@@ -63,6 +63,8 @@ class TradingEngine(Component):
             loss_limit_pct=rc.get("loss_limit_pct", 2.0),
             loss_limit_reset=rc.get("loss_limit_reset", "daily"),
             max_drawdown_pct=rc.get("max_drawdown_pct", 8.0),
+            max_leverage=rc.get("max_leverage", 1.0),
+            liquidation_buffer=rc.get("liquidation_buffer", 0.05),
         )
 
         if mode == "live" and exchange:
@@ -223,7 +225,30 @@ class TradingEngine(Component):
                         ))
                         continue
 
-                    size = self.risk.calculate_position_size(balance, current_price)
+                    # 1. Strategy requests leverage
+                    leverage = self.strategy.leverage(pair, strat_signal.direction, data)
+
+                    # 2. Risk manager validates
+                    leverage = self.risk.validate_leverage(leverage)
+
+                    # 3. Calculate leveraged size and margin
+                    size, margin = self.risk.calculate_position_size(balance, current_price, leverage)
+
+                    # 4. Check total portfolio exposure
+                    open_pos_list = list(self.positions.open_positions.values())
+                    if not self.risk.check_total_exposure(open_pos_list, size, current_price, balance):
+                        await self.bus.publish(SignalRejected(
+                            pair=pair, direction=strat_signal.direction,
+                            reason="total exposure limit exceeded",
+                        ))
+                        continue
+
+                    # 5. Set leverage on exchange (some exchanges require this before order)
+                    if leverage > 1.0 and self.exchange:
+                        try:
+                            await self.exchange.set_leverage(pair, leverage)
+                        except Exception as e:
+                            logger.warning("[%s] Failed to set leverage: %s", pair, e)
 
                     side = "buy" if strat_signal.direction == "long" else "sell"
                     await self.bus.publish(OrderSubmitted(
@@ -231,6 +256,7 @@ class TradingEngine(Component):
                         size=size, price=current_price,
                     ))
 
+                    # 9. Execute order
                     result = await self.executor.execute(strat_signal, current_price, size)
 
                     if result.success:
@@ -247,24 +273,48 @@ class TradingEngine(Component):
                             sl = dynamic_sl
                             tp = dynamic_tp
                         else:
+                            # 6. Adjust stoploss for leverage
                             sl_pct = self.strategy.params.get("stoploss", -3.0) / 100
                             tp_pct = self.strategy.params.get("take_profit", 6.0) / 100
+                            effective_sl_pct = self.risk.adjust_stoploss_for_leverage(sl_pct, leverage)
                             if strat_signal.direction == "long":
-                                sl = result.price * (1 + sl_pct)
+                                sl = result.price * (1 + effective_sl_pct)
                                 tp = result.price * (1 + tp_pct)
                             else:
-                                sl = result.price * (1 - sl_pct)
+                                sl = result.price * (1 - effective_sl_pct)
                                 tp = result.price * (1 - tp_pct)
+
+                        # 7. Calculate liquidation price with buffer
+                        liquidation_price = 0.0
+                        if leverage > 1.0:
+                            maint_margin = 0.005
+                            if self.exchange:
+                                try:
+                                    maint_margin = await self.exchange.get_maintenance_margin_rate(pair)
+                                except NotImplementedError:
+                                    pass
+                            liquidation_price = self.risk.calculate_liquidation_price(
+                                result.price, leverage, strat_signal.direction, maint_margin,
+                            )
+                            liquidation_buffered = self.risk.apply_liquidation_buffer(
+                                liquidation_price, result.price,
+                            )
+                            # 8. Enforce the more protective of SL and liquidation
+                            sl = self.risk.stoploss_or_liquidation(sl, liquidation_buffered, strat_signal.direction)
+                            liquidation_price = liquidation_buffered
 
                         trailing = self.strategy.params.get("trailing_stop", False)
                         trailing_dist = self.strategy.params.get("trailing_stop_distance", 1.5)
                         trailing_activate = self.strategy.params.get("trailing_stop_activate", 0.0)
 
+                        # 10. Open position with leverage metadata
                         self.positions.open(
                             pair=pair, direction=strat_signal.direction,
                             entry_price=result.price, size=result.size,
                             entry_time=current_time, strategy=self.strategy.name,
                             stoploss=sl, take_profit=tp,
+                            leverage=leverage, margin=margin,
+                            liquidation_price=liquidation_price,
                             trailing_stop=trailing,
                             trailing_distance_pct=trailing_dist,
                             trailing_activate_pct=trailing_activate,

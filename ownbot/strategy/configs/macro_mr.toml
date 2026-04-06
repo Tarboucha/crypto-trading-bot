@@ -1,0 +1,30 @@
+# Macro Momentum + Micro Mean Reversion
+# Designed for crisis/bear markets
+
+timeframe = "5m"
+
+# Macro momentum (determines long/short/flat)
+macro_window = 576       # 48h in 5m candles (best Sharpe from data analysis)
+macro_threshold = 0.02   # 2% minimum 48h move to establish bias
+
+# Micro mean reversion (entry timing)
+mr_window = 6            # 30min in 5m candles (best mean reversion from data)
+mr_min_atr = 0.5         # bounce/dip must exceed 0.5 × ATR
+
+# ATR
+atr_period = 48          # 4h ATR for smooth estimate
+
+# Exit: trailing stop
+trailing_atr_mult = 3.5  # 3.5 × ATR from peak
+trailing_period = 96     # 8h lookback for peak
+
+# Exit: take profit
+tp_atr_mult = 8.0        # TP at 8 × ATR from entry
+
+# Cooldown
+cooldown_candles = 24    # 2h between trades
+
+# Risk
+stoploss = -5.0
+take_profit = 15.0
+direction = "both"

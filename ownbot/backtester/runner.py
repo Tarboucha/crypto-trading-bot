@@ -47,6 +47,8 @@ class Backtester:
             loss_limit_pct=rc.get("loss_limit_pct", 2.0),
             loss_limit_reset=rc.get("loss_limit_reset", "daily"),
             max_drawdown_pct=rc.get("max_drawdown_pct", 8.0),
+            max_leverage=rc.get("max_leverage", 1.0),
+            liquidation_buffer=rc.get("liquidation_buffer", 0.05),
         )
 
     async def fetch_candles(
@@ -107,8 +109,11 @@ class Backtester:
         all_trades: list[ClosedTrade] = []
         all_fees: float = 0.0
 
+        # Use strategy's startup_candle_count if larger than default window
+        effective_window = max(window, self.strategy.startup_candle_count)
+
         for pair in self.pairs:
-            trades, fees = await self._run_pair(pair, start_ms, end_ms, window)
+            trades, fees = await self._run_pair(pair, start_ms, end_ms, effective_window)
             all_trades.extend(trades)
             all_fees += fees
             logger.info("%s — %d trades, $%.2f fees", pair, len(trades), fees)
@@ -235,20 +240,50 @@ class Backtester:
             if signal.action == "enter" and not positions.has_position(pair):
                 # Apply costs to entry price
                 entry_price = self.costs.apply_entry_price(close, signal.direction, high, low)
-                size = self.risk.calculate_position_size(balance, entry_price)
+
+                # Leverage pipeline (mirrors engine.py)
+                leverage = self.strategy.leverage(pair, signal.direction, data)
+                leverage = self.risk.validate_leverage(leverage)
+                size, margin = self.risk.calculate_position_size(balance, entry_price, leverage)
+
+                # Check total exposure
+                open_pos_list = list(positions.open_positions.values())
+                if not self.risk.check_total_exposure(open_pos_list, size, entry_price, balance):
+                    continue
+
                 fee = self.costs.fee_for_trade(entry_price, size)
                 total_fees += fee
                 balance -= fee
 
-                sl_pct = self.strategy.params.get("stoploss", -3.0) / 100  # -3.0 → -0.03
-                tp_pct = self.strategy.params.get("take_profit", 6.0) / 100  # 6.0 → 0.06
+                # Dynamic SL/TP or compute from config
+                dynamic_sl = self.strategy.params.pop("_dynamic_sl", None)
+                dynamic_tp = self.strategy.params.pop("_dynamic_tp", None)
 
-                if signal.direction == "long":
-                    sl = entry_price * (1 + sl_pct)
-                    tp = entry_price * (1 + tp_pct)
+                if dynamic_sl is not None and dynamic_tp is not None:
+                    sl = dynamic_sl
+                    tp = dynamic_tp
                 else:
-                    sl = entry_price * (1 - sl_pct)
-                    tp = entry_price * (1 - tp_pct)
+                    sl_pct = self.strategy.params.get("stoploss", -3.0) / 100
+                    tp_pct = self.strategy.params.get("take_profit", 6.0) / 100
+                    effective_sl_pct = self.risk.adjust_stoploss_for_leverage(sl_pct, leverage)
+                    if signal.direction == "long":
+                        sl = entry_price * (1 + effective_sl_pct)
+                        tp = entry_price * (1 + tp_pct)
+                    else:
+                        sl = entry_price * (1 - effective_sl_pct)
+                        tp = entry_price * (1 - tp_pct)
+
+                # Liquidation protection
+                liquidation_price = 0.0
+                if leverage > 1.0:
+                    liquidation_price = self.risk.calculate_liquidation_price(
+                        entry_price, leverage, signal.direction,
+                    )
+                    liquidation_buffered = self.risk.apply_liquidation_buffer(
+                        liquidation_price, entry_price,
+                    )
+                    sl = self.risk.stoploss_or_liquidation(sl, liquidation_buffered, signal.direction)
+                    liquidation_price = liquidation_buffered
 
                 positions.open(
                     pair=pair,
@@ -259,6 +294,9 @@ class Backtester:
                     strategy=self.strategy.name,
                     stoploss=sl,
                     take_profit=tp,
+                    leverage=leverage,
+                    margin=margin,
+                    liquidation_price=liquidation_price,
                 )
 
             elif signal.action == "exit" and positions.has_position(pair):

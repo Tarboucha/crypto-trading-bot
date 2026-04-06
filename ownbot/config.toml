@@ -20,6 +20,9 @@ risk_per_trade_pct = 0.3
 max_exposure_pct = 4.0
 loss_limit_pct = 2.0
 loss_limit_reset = "daily"         # "hourly" | "4h" | "8h" | "daily" | "weekly" | "session"
+max_leverage = 5.0                 # global max leverage any strategy can request
+liquidation_buffer = 0.05          # 5% safety buffer from liquidation price
+margin_mode = "isolated"           # "isolated" (per-position) or "cross" (shared)
 
 [strategy]
 name = "trend_follow"       # loads strategy/trend_follow.toml automatically

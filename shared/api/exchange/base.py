@@ -92,6 +92,18 @@ class BaseExchange(ABC):
     async def get_order_status(self, order_id: str, symbol: str) -> OrderResult:
         """Get the current status of an order."""
 
+    async def get_max_leverage(self, symbol: str) -> float:
+        """Get maximum leverage allowed for this pair on the exchange."""
+        raise NotImplementedError
+
+    async def set_leverage(self, symbol: str, leverage: float) -> None:
+        """Set leverage for a pair on the exchange (required before order on some exchanges)."""
+        raise NotImplementedError
+
+    async def get_maintenance_margin_rate(self, symbol: str) -> float:
+        """Get maintenance margin rate for liquidation calculation."""
+        raise NotImplementedError
+
     @abstractmethod
     async def get_funding_rate(self, symbol: str) -> float:
         """Get the current funding rate for a symbol."""

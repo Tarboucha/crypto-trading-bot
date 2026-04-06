@@ -15,6 +15,9 @@ class RiskConfig:
     max_exposure_pct: float = 4.0
     loss_limit_pct: float = 2.0
     loss_limit_reset: str = "daily"  # "hourly" | "4h" | "8h" | "daily" | "weekly" | "session"
+    max_leverage: float = 1.0
+    liquidation_buffer: float = 0.05
+    margin_mode: str = "isolated"  # "isolated" | "cross"
 
 
 @dataclass

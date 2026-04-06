@@ -17,6 +17,10 @@ class Position:
     strategy: str = ""
     cumulative_funding: float = 0.0
     funding_events: int = 0
+    # Leverage
+    leverage: float = 1.0
+    margin: float = 0.0
+    liquidation_price: float = 0.0
     # Trailing stoploss
     trailing_stop: bool = False
     trailing_distance_pct: float = 0.0
@@ -39,6 +43,8 @@ class ClosedTrade:
     reason: str
     funding_pnl: float = 0.0
     strategy: str = ""
+    leverage: float = 1.0
+    margin: float = 0.0
 
 
 class PositionManager:
@@ -61,6 +67,9 @@ class PositionManager:
         strategy: str = "",
         stoploss: float | None = None,
         take_profit: float | None = None,
+        leverage: float = 1.0,
+        margin: float = 0.0,
+        liquidation_price: float = 0.0,
         trailing_stop: bool = False,
         trailing_distance_pct: float = 0.0,
         trailing_activate_pct: float = 0.0,
@@ -77,6 +86,9 @@ class PositionManager:
             strategy=strategy,
             stoploss=stoploss,
             take_profit=take_profit,
+            leverage=leverage,
+            margin=margin,
+            liquidation_price=liquidation_price,
             trailing_stop=trailing_stop,
             trailing_distance_pct=trailing_distance_pct,
             trailing_activate_pct=trailing_activate_pct,
@@ -85,13 +97,14 @@ class PositionManager:
         )
         self.open_positions[pair] = pos
 
+        lev_str = f", lev={leverage}x" if leverage > 1.0 else ""
         trail_str = f", trail={trailing_distance_pct}%" if trailing_stop else ""
         logger.info(
-            "Opened %s %s @ %.2f (size=%.4f, sl=%s, tp=%s%s)",
+            "Opened %s %s @ %.2f (size=%.4f, sl=%s, tp=%s%s%s)",
             direction, pair, entry_price, size,
             f"{stoploss:.2f}" if stoploss else "none",
             f"{take_profit:.2f}" if take_profit else "none",
-            trail_str,
+            lev_str, trail_str,
         )
         return pos
 
@@ -121,6 +134,8 @@ class PositionManager:
             reason=reason,
             strategy=pos.strategy,
             funding_pnl=pos.cumulative_funding,
+            leverage=pos.leverage,
+            margin=pos.margin,
         )
 
         funding_str = f" | funding: ${pos.cumulative_funding:+.4f}" if pos.funding_events > 0 else ""

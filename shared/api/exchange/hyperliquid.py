@@ -285,6 +285,24 @@ class HyperliquidExchange(BaseExchange):
             status="filled", filled_size=0.0, fill_price=0.0,
         )
 
+    async def get_max_leverage(self, symbol: str) -> float:
+        """Hyperliquid supports up to 50x on most pairs."""
+        return 50.0
+
+    async def set_leverage(self, symbol: str, leverage: float) -> None:
+        """Set leverage before placing order on Hyperliquid."""
+        self._check_connected()
+        if not self.exchange:
+            raise AuthError("API secret required to set leverage.")
+        try:
+            self.exchange.update_leverage(int(leverage), symbol)
+        except Exception as e:
+            raise _classify_error(e) from e
+
+    async def get_maintenance_margin_rate(self, symbol: str) -> float:
+        """Hyperliquid maintenance margin rate."""
+        return 0.005  # 0.5%
+
     @retry(max_attempts=3, backoff=[1, 2, 5])
     async def get_funding_rate(self, symbol: str) -> float:
         self._check_connected()

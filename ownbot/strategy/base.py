@@ -36,6 +36,23 @@ class BaseStrategy(ABC):
     def __init__(self, params: dict | None = None):
         self.params = params or {}
 
+    def leverage(self, pair: str, direction: str, data: dict[str, pd.DataFrame]) -> float:
+        """Return desired leverage for this trade entry.
+
+        Called by the engine before entering a position.
+        Only called in futures trading mode.
+
+        Args:
+            pair: trading pair (e.g., "ETH")
+            direction: "long" or "short"
+            data: candle data dict (same as evaluate() receives)
+
+        Returns:
+            Leverage between 1.0 and max_leverage (from config).
+            Default: 1.0 (no leverage). Override in subclass.
+        """
+        return 1.0
+
     def required_pairs(self) -> list[str]:
         """Declare additional pairs this strategy needs besides the one being evaluated.
 

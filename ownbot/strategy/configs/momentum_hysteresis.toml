@@ -1,0 +1,28 @@
+# Momentum Hysteresis Strategy
+# Backtested raw signal: +338% net (6yr), Sharpe 0.92
+
+timeframe = "30m"
+
+# Momentum: 96 × 30m = 48h lookback
+mom_window = 96
+
+# Hysteresis thresholds
+enter_threshold = 0.03   # enter when |48h momentum| > 3%
+exit_threshold = 0.01    # exit when |48h momentum| < 1%
+
+# Min hold: 48 × 30m = 24h
+min_hold = 48
+
+# ATR for dynamic SL (set per-trade at entry)
+atr_period = 48          # 24h ATR
+sl_atr_mult = 3.0        # SL at 3 × ATR from entry
+# TP = 3 × SL distance (3:1 reward/risk, set dynamically)
+
+# Cooldown: 48 × 30m = 24h between trades
+cooldown_candles = 48
+
+direction = "both"
+
+# Backup SL/TP (only used if dynamic fails)
+stoploss = -10.0
+take_profit = 30.0

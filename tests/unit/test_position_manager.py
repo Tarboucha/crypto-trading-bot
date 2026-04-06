@@ -84,7 +84,7 @@ class TestPnLCalculation:
 
     def test_closed_trade_carries_metadata(self, positions):
         positions.open(pair="ETH", direction="long", entry_price=2000.0,
-                       size=1.0, entry_time=1000, strategy="rsi_mean_reversion",
+                       size=1.0, entry_time=1000, strategy="kronos",
                        stoploss=1950.0, take_profit=2100.0)
         closed = positions.close("ETH", 2050.0, 2000, "smart exit")
         assert closed.pair == "ETH"
@@ -93,7 +93,7 @@ class TestPnLCalculation:
         assert closed.exit_price == 2050.0
         assert closed.entry_time == 1000
         assert closed.exit_time == 2000
-        assert closed.strategy == "rsi_mean_reversion"
+        assert closed.strategy == "kronos"
         assert closed.reason == "smart exit"
 
 
@@ -178,6 +178,48 @@ class TestStoplosssTakeprofit:
                        size=1.0, entry_time=1000, strategy="test",
                        stoploss=1950.0, take_profit=2100.0)
         assert positions.check_stoploss_takeprofit("ETH", 2050.0, 2000) is None
+
+
+class TestLeveragePosition:
+
+    def test_open_with_leverage(self, positions):
+        pos = positions.open(
+            pair="ETH", direction="long", entry_price=2000.0,
+            size=0.15, entry_time=1000, strategy="test",
+            leverage=3.0, margin=100.0, liquidation_price=1602.0,
+        )
+        assert pos.leverage == 3.0
+        assert pos.margin == 100.0
+        assert pos.liquidation_price == 1602.0
+
+    def test_default_leverage_is_1x(self, positions):
+        pos = positions.open(
+            pair="ETH", direction="long", entry_price=2000.0,
+            size=0.05, entry_time=1000, strategy="test",
+        )
+        assert pos.leverage == 1.0
+        assert pos.margin == 0.0
+
+    def test_closed_trade_carries_leverage(self, positions):
+        positions.open(
+            pair="ETH", direction="long", entry_price=2000.0,
+            size=0.15, entry_time=1000, strategy="test",
+            leverage=3.0, margin=100.0,
+        )
+        closed = positions.close("ETH", 2100.0, 2000, "test")
+        assert closed.leverage == 3.0
+        assert closed.margin == 100.0
+
+    def test_leveraged_pnl_abs(self, positions):
+        """3x leverage on 1 ETH: size=3.0 (leveraged), entry=2000, exit=2100."""
+        positions.open(
+            pair="ETH", direction="long", entry_price=2000.0,
+            size=3.0, entry_time=1000, strategy="test",
+            leverage=3.0, margin=2000.0,
+        )
+        closed = positions.close("ETH", 2100.0, 2000, "test")
+        # profit_abs = profit_pct * size * entry_price = 0.05 * 3.0 * 2000 = 300
+        assert abs(closed.profit_abs - 300.0) < 0.01
 
 
 class TestTrailingStoploss:

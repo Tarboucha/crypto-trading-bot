@@ -1,0 +1,39 @@
+# Momentum Breakout Strategy Configuration
+# Based on: Turtle Trading + Keltner Channels + Elder's Triple Screen
+# All on single timeframe (5m), wide parameters for real breakouts
+
+timeframe = "5m"
+
+# Trend filter (long EMAs on 5m ≈ higher TF)
+trend_fast_ema = 252     # ≈ EMA21 on 1h
+trend_slow_ema = 660     # ≈ EMA55 on 1h
+
+# Entry: Donchian breakout — WIDE to catch real breakouts not noise
+dc_period = 96           # 96 × 5m = 8 hours high/low breakout
+
+# ATR — longer period for smoother estimate
+atr_period = 48          # 48 × 5m = 4 hours of ATR
+atr_sma_period = 96      # compare ATR to its 8-hour average
+
+# Volume confirmation
+vol_sma_period = 48
+vol_mult = 1.5           # need clear volume spike
+
+# RSI filter
+rsi_period = 14
+rsi_entry_max = 68       # slightly tighter to avoid chasing
+rsi_entry_min = 32
+
+# Exit: Chandelier stop — WIDE to ride trends through noise
+chandelier_mult = 4.0    # 4 × ATR from peak (was 3, too tight)
+chandelier_period = 96   # 8-hour lookback for highest high
+
+# Exit: RSI extremes
+rsi_exit_long = 82
+rsi_exit_short = 18
+
+direction = "both"
+
+# Risk
+stoploss = -6.0          # hard backup stoploss %
+take_profit = 20.0       # let winners run

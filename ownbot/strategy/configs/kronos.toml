@@ -1,0 +1,29 @@
+# Kronos Strategy Configuration
+
+# Model
+model_path = "data/ml/models/kronos_signal_filter_final.pt"
+device = "cuda"                    # "cuda" or "cpu"
+timeframe = "5m"
+
+# Input
+sequence_length = 50               # candles fed to Kronos
+
+# Entry
+entry_threshold = 0.58             # min win probability to enter (0.0-1.0)
+
+# Exit
+exit_mode = "normal"               # "aggressive" | "normal" | "patient" | "custom"
+exit_threshold = 0.50              # only used if exit_mode = "custom"
+max_hold_candles = 0               # force exit after N candles (0 = disabled)
+
+# Direction
+direction_lookback = 5             # candles to detect trend direction
+
+# Risk (per trade)
+stoploss = -1.5                    # initial stoploss %
+take_profit = 1.5                  # takeprofit %
+
+# Trailing stoploss
+trailing_stop = false              # enable/disable
+trailing_stop_distance = 1.5       # trail X% below peak (long) or above trough (short)
+trailing_stop_activate = 0.0       # start trailing after +X% profit (0 = immediate)

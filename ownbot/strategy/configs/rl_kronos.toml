@@ -1,0 +1,28 @@
+# RL Kronos Strategy — uses trained SAC agent with Kronos MC features
+
+# Model paths
+model_path = "data/ml/rl/models/sac_trading/best_model/best_model.zip"
+tokenizer_path = "data/ml/kronos/finetuned/eth_5m/tokenizer/best_model"
+predictor_path = "data/ml/kronos/finetuned/eth_5m/predictor/best_model"
+device = "cuda"
+
+# MC sampling
+mc_samples = 5
+temperature = 1.0
+top_p = 0.9
+
+# Risk — hard limits; the RL agent requests within them
+stoploss = -2.0          # hard SL limit (%, before leverage adjustment)
+take_profit = 3.0        # hard TP limit (%)
+max_leverage = 3.0       # max leverage the RL agent can request
+
+# Dead zone — |exposure| must exceed this to enter/hold
+dead_zone = 1.0
+
+# Dynamic SL/TP from MC features
+use_dynamic_sl_tp = true
+sl_margin = 0.01         # safety margin on dynamic SL
+tp_margin = 0.01         # margin on dynamic TP
+
+# Timing
+timeframe = "5m"

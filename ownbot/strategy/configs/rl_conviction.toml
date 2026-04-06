@@ -1,0 +1,40 @@
+# RL Conviction Strategy — LSTM agent outputting conviction signal [-1, +1]
+
+# ── Model paths ──
+model_path = "data/ml/rl/models/conviction_lstm128x1_mlp64_linear/best_model/best_model.zip"
+tokenizer_path = "data/ml/kronos/finetuned/eth_5m/tokenizer/best_model"
+predictor_path = "data/ml/kronos/finetuned/eth_5m/predictor/best_model"
+device = "cuda"
+
+# ── MC sampling ──
+mc_samples = 5
+mc_temperature = 1.0
+mc_top_p = 0.9
+
+# ── Signal interpretation ──
+entry_threshold = 0.6       # conviction needed to enter
+exit_threshold = 0.3        # conviction below this → exit
+epsilon = 0.05              # dead zone (flat)
+
+# ── LSTM warmup ──
+warmup_ticks = 10           # ticks before full conviction after reset
+warmup_discount = 0.5       # conviction multiplier during warmup
+
+# ── Execution ──
+leverage = 3.0              # fixed leverage
+conviction_size_min = 0.5   # min fraction of risk budget at entry_threshold
+conviction_size_max = 1.0   # max fraction at conviction=1.0
+
+# ── Uncertainty scaling ──
+unc_scale_low = 0.002       # sigma below this → no size reduction
+unc_scale_high = 0.01       # sigma above this → max reduction (0.5x)
+
+# ── SL/TP ──
+hard_sl_pct = 3.0           # max stoploss (%)
+hard_tp_pct = 6.0           # max takeprofit (%)
+use_dynamic_sl_tp = true    # derive SL/TP from MC features
+sl_margin = 0.1             # safety margin on MC-derived SL
+tp_margin = 0.01            # margin on MC-derived TP
+
+# ── Timing ──
+timeframe = "5m"

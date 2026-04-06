@@ -28,17 +28,11 @@ third_party/
 # ML lab (separate tooling)
 mllab/
 
-# Kronos strategy files (kept locally, not tracked)
-ownbot/strategy/kronos_strategy.py
-ownbot/strategy/kronos_forecast_strategy.py
-ownbot/strategy/ml/kronos_predictor.py
-ownbot/strategy/configs/kronos.toml
-ownbot/strategy/configs/kronos_forecast.toml
-
-# Documentation (kept locally)
-docs/
+# Documentation (most docs kept locally)
 *.md
 !README.md
+docs/*
+!docs/kronos/
 
 # Claude Code
 .claude/

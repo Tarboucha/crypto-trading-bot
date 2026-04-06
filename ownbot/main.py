@@ -26,10 +26,21 @@ from ownbot.engine.state_reconciler import StateReconciler
 from ownbot.strategy.trend_follow import TrendFollowStrategy
 from ownbot.strategy.rsi_mean_reversion import RSIMeanReversionStrategy
 from ownbot.strategy.ml_filtered_rsi import MLFilteredRSIStrategy
+from ownbot.strategy.momentum_breakout import MomentumBreakoutStrategy
+from ownbot.strategy.macro_mr import MacroMRStrategy
+from ownbot.strategy.momentum_hysteresis import MomentumHysteresisStrategy
+from ownbot.strategy.kronos_strategy import KronosStrategy
+from ownbot.strategy.kronos_forecast_strategy import KronosForecastStrategy
+
 STRATEGIES = {
     "trend_follow": TrendFollowStrategy,
     "rsi_mean_reversion": RSIMeanReversionStrategy,
     "ml_filtered_rsi": MLFilteredRSIStrategy,
+    "momentum_breakout": MomentumBreakoutStrategy,
+    "macro_mr": MacroMRStrategy,
+    "momentum_hysteresis": MomentumHysteresisStrategy,
+    "kronos": KronosStrategy,
+    "kronos_forecast": KronosForecastStrategy,
 }
 
 logger = logging.getLogger("ownbot")
@@ -70,6 +81,8 @@ def _get_risk_config(config):
         "loss_limit_pct": config.risk.loss_limit_pct,
         "loss_limit_reset": config.risk.loss_limit_reset,
         "max_drawdown_pct": config.risk.max_drawdown_pct,
+        "max_leverage": config.risk.max_leverage,
+        "liquidation_buffer": config.risk.liquidation_buffer,
     }
 
 
